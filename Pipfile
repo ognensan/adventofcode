@@ -8,6 +8,7 @@ flake8 = "*"
 pillow = "*"
 matplotlib = "*"
 numpy = "*"
+pytest = "*"
 
 [dev-packages]
 
