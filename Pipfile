@@ -9,6 +9,7 @@ pillow = "*"
 matplotlib = "*"
 numpy = "*"
 pytest = "*"
+pulp = "*"
 
 [dev-packages]
 
