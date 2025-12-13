@@ -133,7 +133,8 @@ def solve_lights_gf2(target_state: List[int], buttons: List[List[int]]) -> Optio
         # Back-substitute to find pivot variables
         for i in range(len(pivot_cols) - 1, -1, -1):
             col = pivot_cols[i]
-            # solution[col] = augmented[i, num_buttons] - sum of (augmented[i, j] * solution[j] for j != col)
+            # solution[col] = augmented[i, num_buttons] - sum of
+            # (augmented[i, j] * solution[j] for j != col)
             val = augmented[i, num_buttons]
             for j in range(num_buttons):
                 if j != col:

@@ -1,5 +1,4 @@
 import pytest
-import numpy as np
 from solution import parse_machine, solve_lights_gf2, solve
 from solution_part2 import parse_machine_part2, solve_joltage_ilp, solve_part2
 
