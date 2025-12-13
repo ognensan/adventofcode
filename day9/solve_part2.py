@@ -144,7 +144,7 @@ def find_largest_valid_rectangle(points):
             print(f"  ✓ Found valid rectangle at index {idx}")
             return area, (p1, p2)
         else:
-            print(f"    ✗ Invalid")
+            print("    ✗ Invalid")
 
     return 0, None
 

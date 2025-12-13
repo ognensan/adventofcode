@@ -4,12 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-flake8 = "*"
 pillow = "*"
 matplotlib = "*"
 numpy = "*"
+pulp = "*"
 
 [dev-packages]
+flake8 = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.13"
