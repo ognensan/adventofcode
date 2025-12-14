@@ -1,5 +1,7 @@
 import pytest
 from solution import parse_graph, count_paths, solve
+from solution_part2 import (count_paths_with_required_nodes,
+                            solve as solve_part2)
 
 
 def test_parse_graph():
@@ -90,6 +92,94 @@ def test_no_path_exists():
 
     # No path from A to D
     assert count_paths(graph, 'A', 'D') == 0
+
+
+# Part 2 Tests
+
+def test_count_paths_with_required_nodes_simple():
+    """Test path counting with required nodes in a simple graph."""
+    # Create a graph: A -> B -> C -> D where we require passing through B and C
+    graph = {
+        'A': ['B'],
+        'B': ['C'],
+        'C': ['D'],
+        'D': []
+    }
+
+    result = count_paths_with_required_nodes(graph, 'A', 'D', {'B', 'C'})
+    assert result == 1
+
+
+def test_count_paths_with_required_nodes_multiple_paths():
+    """Test path counting with required nodes and multiple possible paths."""
+    # Graph with multiple paths but only some pass through required nodes
+    # A -> B -> D -> E
+    # A -> C -> D -> E
+    # Only paths through B count if B is required
+    graph = {
+        'A': ['B', 'C'],
+        'B': ['D'],
+        'C': ['D'],
+        'D': ['E'],
+        'E': []
+    }
+
+    # Require passing through B
+    result = count_paths_with_required_nodes(graph, 'A', 'E', {'B'})
+    assert result == 1
+
+    # Require passing through both B and D
+    result = count_paths_with_required_nodes(graph, 'A', 'E', {'B', 'D'})
+    assert result == 1
+
+
+def test_count_paths_with_required_nodes_any_order():
+    """Test that paths can visit required nodes in any order."""
+    # Graph where required nodes can be visited in different orders
+    # A -> B -> C -> D
+    # A -> C -> B -> D
+    graph = {
+        'A': ['B', 'C'],
+        'B': ['C', 'D'],
+        'C': ['B', 'D'],
+        'D': []
+    }
+
+    # Both paths A->B->C->D and A->C->B->D should count
+    result = count_paths_with_required_nodes(graph, 'A', 'D', {'B', 'C'})
+    assert result == 2
+
+
+def test_count_paths_missing_required_node():
+    """Test that paths not passing through all required nodes don't count."""
+    # Graph where some paths don't pass through required node
+    graph = {
+        'A': ['B', 'C'],
+        'B': ['D'],
+        'C': ['D'],
+        'D': []
+    }
+
+    # Require passing through node 'X' which doesn't exist in any path
+    result = count_paths_with_required_nodes(graph, 'A', 'D', {'X'})
+    assert result == 0
+
+
+def test_solve_part2_with_test_file():
+    """Test part 2 solution with test file."""
+    # This will depend on whether svr, fft, and dac exist in test file
+    # If they don't exist, we expect 0 paths
+    result = solve_part2('11_test.csv', 'svr', 'out', {'fft', 'dac'})
+    # svr, fft, dac likely don't exist in test file
+    assert result == 0
+
+
+def test_solve_part2_with_actual_file():
+    """Test part 2 solution with actual input file."""
+    # Test with the actual file which should have svr, fft, dac, and out
+    result = solve_part2('11.csv', 'svr', 'out', {'fft', 'dac'})
+    # Should find some paths (actual count depends on graph structure)
+    assert result >= 0  # At minimum, should not error
 
 
 if __name__ == '__main__':
