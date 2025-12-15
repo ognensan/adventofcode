@@ -3,7 +3,9 @@ from multiprocessing import Pool, cpu_count
 import sys
 
 
-def parse_input(filename: str) -> Tuple[Dict[int, List[str]], List[Tuple[int, int, List[int]]]]:
+def parse_input(filename: str) -> Tuple[
+    Dict[int, List[str]], List[Tuple[int, int, List[int]]]
+]:
     """Parse input file - always 6 elements then area definitions."""
     with open(filename, 'r') as f:
         lines = [line.rstrip('\n') for line in f.readlines()]
@@ -78,13 +80,17 @@ def shape_to_coords(shape: List[str]) -> List[Tuple[int, int]]:
     return coords
 
 
-def normalize_rotation(shape_coords: List[Tuple[int, int]]) -> Tuple[Tuple[int, int], ...]:
-    """Normalize shape coordinates to start at (0, 0) and return as sorted tuple."""
+def normalize_rotation(
+    shape_coords: List[Tuple[int, int]]
+) -> Tuple[Tuple[int, int], ...]:
+    """Normalize shape coordinates to start at (0, 0)."""
     if not shape_coords:
         return tuple()
     min_r = min(r for r, c in shape_coords)
     min_c = min(c for r, c in shape_coords)
-    normalized = tuple(sorted((r - min_r, c - min_c) for r, c in shape_coords))
+    normalized = tuple(sorted(
+        (r - min_r, c - min_c) for r, c in shape_coords
+    ))
     return normalized
 
 
@@ -143,10 +149,11 @@ class DancingLinks:
             self.columns.append(col)
             prev = col
 
-        # Create secondary columns (optional coverage) - NOT linked to header
+        # Create secondary columns (optional coverage) - NOT linked
+        # to header
         self.secondary_start = None
         if num_secondary_cols > 0:
-            self.secondary_start = ColumnNode(f"S0")
+            self.secondary_start = ColumnNode("S0")
             self.columns.append(self.secondary_start)
             prev = self.secondary_start
 
@@ -231,7 +238,8 @@ class DancingLinks:
         if self.header.right == self.header:
             return True
 
-        # Choose column with minimum size (S heuristic) from primary columns only
+        # Choose column with minimum size (S heuristic)
+        # from primary columns only
         col = None
         min_size = float('inf')
         c = self.header.right
@@ -251,11 +259,13 @@ class DancingLinks:
         while row != col:
             self.solution.append(row.row_id)
 
-            # Cover all other columns in this row (both primary and secondary)
+            # Cover all other columns in this row
+            # (both primary and secondary)
             right = row.right
             while right != row:
                 # Only cover if it's a column that's still in the matrix
-                if right.column.name.startswith('P') or right.column.name.startswith('S'):
+                if (right.column.name.startswith('P') or
+                        right.column.name.startswith('S')):
                     self.cover(right.column)
                 right = right.right
 
@@ -269,7 +279,8 @@ class DancingLinks:
             # Uncover in reverse order
             left = row.left
             while left != row:
-                if left.column.name.startswith('P') or left.column.name.startswith('S'):
+                if (left.column.name.startswith('P') or
+                        left.column.name.startswith('S')):
                     self.uncover(left.column)
                 left = left.left
 
@@ -279,14 +290,18 @@ class DancingLinks:
         return False
 
 
-def solve_area_dlx(rows: int, cols: int, elements_to_place: List[Tuple[int, List[List[str]]]]) -> bool:
+def solve_area_dlx(
+    rows: int, cols: int,
+    elements_to_place: List[Tuple[int, List[List[str]]]]
+) -> bool:
     """Solve area using Dancing Links."""
     # Early exit: check total cells needed vs available
     grid_cells = rows * cols
     total_cells_needed = 0
 
     for element_id, rotations in elements_to_place:
-        # Count cells in first rotation (all rotations have same number of cells)
+        # Count cells in first rotation
+        # (all rotations have same number of cells)
         coords = shape_to_coords(rotations[0])
         total_cells_needed += len(coords)
 
@@ -304,11 +319,16 @@ def solve_area_dlx(rows: int, cols: int, elements_to_place: List[Tuple[int, List
     num_elements = len(elements_to_place)
     num_cells = rows * cols
 
-    dlx = DancingLinks(num_primary_cols=num_elements, num_secondary_cols=num_cells)
+    dlx = DancingLinks(
+        num_primary_cols=num_elements,
+        num_secondary_cols=num_cells
+    )
 
     # Generate all possible placements
     row_id = 0
-    for elem_idx, (element_id, unique_rots) in enumerate(element_rotations_list):
+    for elem_idx, (element_id, unique_rots) in enumerate(
+        element_rotations_list
+    ):
         elem_placements = 0
         for rot_coords in unique_rots:
             for start_row in range(rows):
@@ -329,7 +349,10 @@ def solve_area_dlx(rows: int, cols: int, elements_to_place: List[Tuple[int, List
 
                     if valid:
                         # Create constraint row
-                        constraint_cols = [elem_idx] + [num_elements + cell for cell in cells]
+                        constraint_cols = (
+                            [elem_idx] +
+                            [num_elements + cell for cell in cells]
+                        )
                         dlx.add_row(row_id, constraint_cols)
                         row_id += 1
                         elem_placements += 1
@@ -352,10 +375,15 @@ def process_single_area(args):
     for element_id, count in enumerate(element_counts):
         for _ in range(count):
             if element_id in element_rotations:
-                elements_to_place.append((element_id, element_rotations[element_id]))
+                elements_to_place.append(
+                    (element_id, element_rotations[element_id])
+                )
 
     # Calculate stats for reporting
-    total_cells_needed = sum(len(shape_to_coords(rotations[0])) for _, rotations in elements_to_place)
+    total_cells_needed = sum(
+        len(shape_to_coords(rotations[0]))
+        for _, rotations in elements_to_place
+    )
     grid_cells = rows * cols
 
     # Estimate DLX matrix size
@@ -366,7 +394,12 @@ def process_single_area(args):
 
     max_rows_estimate = sum(ur * rows * cols for ur in est_unique_rots)
 
-    result_msg = f"Processing area {area_idx + 1}/{total_areas}: {rows}x{cols} grid ({grid_cells} cells), {len(elements_to_place)} elements ({total_cells_needed} cells), ~{max_rows_estimate:,} placements... "
+    result_msg = (
+        f"Processing area {area_idx + 1}/{total_areas}: "
+        f"{rows}x{cols} grid ({grid_cells} cells), "
+        f"{len(elements_to_place)} elements ({total_cells_needed} cells), "
+        f"~{max_rows_estimate:,} placements... "
+    )
 
     # Try to solve this area
     if total_cells_needed > grid_cells:
@@ -390,18 +423,24 @@ def count_fitting_areas(filename: str, num_workers: int = None) -> int:
     print(f"Total areas to process: {total_areas}")
 
     if num_workers is None:
-        num_workers = min(cpu_count(), 8)  # Cap at 8 to avoid too much memory usage
+        # Cap at 8 to avoid too much memory usage
+        num_workers = min(cpu_count(), 8)
 
     print(f"Using {num_workers} parallel workers")
 
     # Prepare arguments for parallel processing
-    args_list = [(idx, area, element_rotations, total_areas) for idx, area in enumerate(areas)]
+    args_list = [
+        (idx, area, element_rotations, total_areas)
+        for idx, area in enumerate(areas)
+    ]
 
     fitting_count = 0
 
     # Process areas in parallel
     with Pool(processes=num_workers) as pool:
-        for result, message in pool.imap_unordered(process_single_area, args_list):
+        for result, message in pool.imap_unordered(
+            process_single_area, args_list
+        ):
             print(message, flush=True)
             if result:
                 fitting_count += 1
