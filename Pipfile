@@ -8,6 +8,7 @@ pillow = "*"
 matplotlib = "*"
 numpy = "*"
 pulp = "*"
+torch = "*"
 
 [dev-packages]
 flake8 = "*"
