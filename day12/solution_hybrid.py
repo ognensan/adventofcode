@@ -328,6 +328,13 @@ def solve_area_dlx(
     elements_to_place: List[Tuple[int, List[List[Tuple[int, int]]]]]
 ) -> bool:
     """Solve area using Dancing Links."""
+    # Early exit: check if area can fit elements as full 3x3 blocks
+    # If yes, it will definitely fit the actual elements
+    num_elements = len(elements_to_place)
+    max_3x3_blocks = (rows // 3) * (cols // 3)
+    if max_3x3_blocks >= num_elements:
+        return True
+
     # Early exit: check total cells needed vs available
     grid_cells = rows * cols
     total_cells_needed = 0
@@ -402,6 +409,12 @@ def solve_area_gpu(
     """
     if not GPU_AVAILABLE or GPU_DEVICE == "cpu":
         return solve_area_dlx(rows, cols, elements_to_place)
+
+    # Early exit: check if area can fit elements as full 3x3 blocks
+    num_elements = len(elements_to_place)
+    max_3x3_blocks = (rows // 3) * (cols // 3)
+    if max_3x3_blocks >= num_elements:
+        return True
 
     # Early exit: check total cells needed vs available
     grid_cells = rows * cols
@@ -500,10 +513,17 @@ def generic_worker(
             )
             grid_cells = rows * cols
 
+            # Check 3x3 optimization first
+            num_elements = len(elements_to_place)
+            max_3x3_blocks = (rows // 3) * (cols // 3)
+
             # Solve
             if total_cells_needed > grid_cells:
                 result = False
                 status = "✗ Too many cells"
+            elif max_3x3_blocks >= num_elements:
+                result = True
+                status = "✓ Fits (3x3 blocks)"
             elif solve_func(rows, cols, elements_to_place):
                 result = True
                 status = "✓ Fits"
@@ -644,6 +664,7 @@ def count_fitting_areas_hybrid(
     too_many_cells_count = 0
     doesnt_fit_count = 0
     cached_count = 0
+    optimization_3x3_count = 0
     results_received = 0
 
     while results_received < total_areas:
@@ -661,6 +682,9 @@ def count_fitting_areas_hybrid(
 
         if "cached" in message or "reused" in message:
             cached_count += 1
+
+        if "3x3 blocks" in message:
+            optimization_3x3_count += 1
 
         results_received += 1
 
@@ -797,6 +821,15 @@ def count_fitting_areas_hybrid(
     print(f"  • Areas skipped (reused from cache): {cached_count}")
     print(f"  • Areas computed from scratch: "
           f"{total_areas - cached_count}")
+
+    print("\n⚡ OPTIMIZATIONS:")
+    print(f"  • Areas solved with 3x3 block optimization: "
+          f"{optimization_3x3_count}")
+    if optimization_3x3_count > 0:
+        optimization_pct = (optimization_3x3_count / fitting_count) * 100
+        print(f"    ({optimization_pct:.1f}% of areas that fit)")
+    dlx_solved = fitting_count - optimization_3x3_count - cached_count
+    print(f"  • Areas requiring full DLX solving: {dlx_solved}")
 
     # Print cache statistics
     if result_cache:
